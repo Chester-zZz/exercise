@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>navigator和screen</title>
+    <script>
+        window.onload=function () {
+            var result = [];
+            var contents={
+                'navigator.appName': navigator.appName,
+                'navigator.appVersion': navigator.appVersion,
+                'userAgent': navigator.userAgent,
+                'platform': navigator.platform,
+                'navigator.onLine': navigator.onLine,
+                'navigator.geolocation': navigator.geolocation,
+                'navigator.javaEnabled()': navigator.javaEnabled(),
+                'navigator.cookieEnabled': navigator.cookieEnabled,
+                'screen.width':screen.width ,
+                'screen.height':screen.height ,
+                'screen.availWidth':screen.availWidth ,
+                'screen.availHeight':screen.availHeight ,
+                'screen.colorDepth':screen.colorDepth
+            };
+            for(i in contents){
+                var content = '【'+i+'】： '+contents[i];
+                result.push('<p>'+content+'</p><br>');
+            };
+            document.write(result.join(''));
+        };
+
+    </script>
+</head>
+<body>
+
+</body>
+</html>

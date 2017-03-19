@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>事件捕获与冒泡</title>
+    <script>
+        window.onload=function () {
+            var div1 = document.getElementById('div1');
+
+            div1.addEventListener('click', function () {
+                alert('冒泡');
+            },false);
+            //这里还是先冒泡，因为捕获不涉及该元素自身，只涉及祖先元素
+            div1.addEventListener('click', function () {
+                alert('该元素捕获');
+            },true);
+            document.addEventListener('click', function () {
+                alert('document捕获');
+
+            },true);
+        }
+    </script>
+</head>
+<body>
+    <div id="div1">我是一个div</div>
+</body>
+</html>

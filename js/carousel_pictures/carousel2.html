@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>轮播图上下滑动</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        #container {
+            width: 520px;
+            height: 280px;
+            margin: 30px auto;
+            position: relative;
+            border: 1px solid #7a7a7a;
+            /*这个overflow应该加在容器上，不应该是加载ul上，因为ul会动*/
+            overflow: hidden;
+        }
+
+        ul {
+            width: 520px;
+            height: 283px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            list-style: none;
+        }
+
+        ul li {
+            width: 520px;
+            /*float: left;*/
+            /*top: 0;*/
+            /*left: 0;*/
+            /*display: block;*/
+        }
+
+        ol {
+            list-style: none;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 6;
+        }
+
+        ol li {
+            width: 25px;
+            height: 25px;
+            float: left;
+            border: 1px solid #7a7a7a;
+            text-align: center;
+            line-height: 25px;
+            margin-left: 5px;
+            background-color: rgba(100, 100, 100, 0.5);
+            color: white;
+            font-weight: bold;
+        }
+
+        .chosen {
+            background-color: rgba(254, 92, 29, 0.9);
+            color: white;
+        }
+    </style>
+    <script>
+        window.onload = function () {
+
+
+            function slideElement(element1, toTop, toLeft) {
+                clearInterval(element1.slideTimer);
+
+//                console.log('初始化解除定时器:' + element1.slideTimer);
+
+                element1.style.position = 'absolute';
+                var toTop1 = toTop || 0;
+                var toLeft1 = toLeft || 0;
+//                这里的增量，可能增加一份之后会导致越过本来想要达到的地方，所以会导致无限变化,并不是定时器的原因，而是最后一次的定时器无法清除
+                var topIncrement = (toTop1 - parseFloat(window.getComputedStyle(element1).top.slice(0, -2))) / 10;
+                var leftIncrement = (toLeft1 - parseFloat(window.getComputedStyle(element1).left.slice(0, -2))) / 10;
+                var t = setInterval(function () {
+//                    console.log('运行定时器:' + element1.slideTimer);
+                    var topNow = parseFloat(window.getComputedStyle(element1).top.slice(0, -2));
+//                    console.log(topNow);
+                    var leftNow = parseFloat(window.getComputedStyle(element1).left.slice(0, -2));
+
+                    if (topNow !== toTop1 || leftNow !== toLeft1) {
+//                        这里如果越界了，就直接设为那个目标值，因为增量足够小，所以这种反向运动的一个瞬间应该看不出来
+                        if ((toTop1 - topNow) * topIncrement < 0) {
+                            element1.style.top = toTop1 + 'px';
+                            element1.style.left = toLeft1 + leftIncrement + 'px';
+                        }else{
+                            element1.style.top = topNow + topIncrement + 'px';
+                            element1.style.left = leftNow + leftIncrement + 'px';
+                        }
+                    } else {
+                        clearInterval(t);
+//                        console.log('正式解除定时器:' + element1.slideTimer);
+                    }
+                }, 10);
+                element1.slideTimer = t;
+            }
+
+//            style是获取行内样式，getComputedStyle是获取计算后的样式
+            var ul1 = document.getElementsByTagName('ul')[0];
+//            选中的是类数组对象，不是数组对象
+            var ulLiHeight = parseFloat(window.getComputedStyle(ul1.getElementsByTagName('li')[0]).height);
+//            console.log('height:'+ulLiHeight);
+//            给ol的li添加mouseover事件处理程序
+            var olLiList = document.getElementsByTagName('ol')[0].getElementsByTagName('li');
+            Array.prototype.forEach.call(olLiList, function (theLi, index) {
+                theLi.addEventListener('mouseover', function () {
+                    var formerOlLi = document.getElementsByClassName('chosen')[0];
+                    formerOlLi.className = '';
+                    theLi.className = 'chosen';
+
+                    var toTop = -(index * ulLiHeight);
+//                    console.log(toTop);
+                    clearInterval(ul1.slideTimer);
+
+                    slideElement(ul1, toTop)
+
+
+                });
+
+            });
+        }
+    </script>
+</head>
+<body>
+<div id="container">
+    <ul>
+        <li><img src="1.jpg" alt=""></li>
+        <li><img src="2.jpg" alt=""></li>
+        <li><img src="3.jpg" alt=""></li>
+        <li><img src="4.jpg" alt=""></li>
+        <li><img src="5.jpg" alt=""></li>
+    </ul>
+    <ol>
+        <li class="chosen">1</li>
+        <li>2</li>
+        <li>3</li>
+        <li>4</li>
+        <li>5</li>
+    </ol>
+</div>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>轮播图淡入淡出</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        #container {
+            width: 520px;
+            height: 280px;
+            margin: 30px auto;
+            position: relative;
+            border: 1px solid #7a7a7a;
+
+        }
+
+        ul {
+            width: 520px;
+            height: 280px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            list-style: none;
+        }
+
+        ul li {
+            width: 520px;
+            float: left;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+        }
+
+        ol {
+            list-style: none;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 6;
+        }
+
+        ol li {
+            width: 25px;
+            height: 25px;
+            float: left;
+            border: 1px solid #7a7a7a;
+            text-align: center;
+            line-height: 25px;
+            margin-left: 5px;
+            background-color: rgba(100, 100, 100, 0.5);
+            color: white;
+            font-weight: bold;
+        }
+
+        .chosen {
+            background-color: rgba(254, 92, 29, 0.9);
+            color: white;
+        }
+    </style>
+    <script>
+        window.onload = function () {
+
+
+            function fadein(element1) {
+//                if (element1.fadeoutTimer !== null || element1.fadeoutTimer !== undefined) {
+//                    clearInterval(element1.fadeoutTimer);
+//                    console.log(element1.fadeoutTimer);
+//                }
+//                *****************************************************
+//                关键在于这两句，如果鼠标移动较快的话，不清除计时器，就会导致fadein和fadeout的计时器同时存在，永远不返回。
+//                而现在不知道如何全局寻找计时器。所以将计时器返回，设为元素的一个属性。每次fadein或fadeout都先清一遍计时器再说。
+//                *****************************************************
+                clearInterval(element1.fadeoutTimer);
+                clearInterval(element1.fadeinTimer);
+                element1.style.opacity = 0;
+//                console.log('淡入动画开始');
+
+                element1.style.display = 'block';
+                var t = setInterval(function () {
+                    if (element1.style.opacity < 1) {
+                        element1.style.opacity = parseFloat(element1.style.opacity) + 0.1;
+                    } else {
+//                        console.log('淡入动画完成');
+
+                        clearInterval(t);
+                    }
+                }, 100);
+                element1.fadeinTimer = t;
+
+
+            }
+
+            function fadeout(element1) {
+//                if (element1.fadeinTimer !== null || element1.fadeinTimer !== undefined) {
+//                    clearInterval(element1.fadeinTimer);
+//                }
+                clearInterval(element1.fadeoutTimer);
+                clearInterval(element1.fadeinTimer);
+//                console.log('淡出动画开始');
+
+//                element1.style.display = 'block';
+//                这是异步的
+                var t = setInterval(function () {
+                    if (element1.style.opacity > 0) {
+                        element1.style.opacity = parseFloat(element1.style.opacity) - 0.1;
+                    } else {
+//                        console.log('淡出动画完成');
+                        element1.style.display = 'none';
+                        clearInterval(t);
+                    }
+                }, 100);
+                element1.fadeoutTimer = t;
+
+            }
+
+
+            var ulLiList = document.getElementsByTagName('ul')[0].getElementsByTagName('li');
+//            给ol的li添加mouseover事件处理程序
+            var olLiList = document.getElementsByTagName('ol')[0].getElementsByTagName('li');
+//            选中的是类数组对象，不是数组对象
+            Array.prototype.forEach.call(olLiList, function (theLi, index) {
+                theLi.addEventListener('mouseover', function () {
+                    var formerOlLi = document.getElementsByClassName('chosen')[0];
+                    formerOlLi.className = '';
+                    theLi.className = 'chosen';
+
+                    Array.prototype.forEach.call(ulLiList, function (theUlLi) {
+                        if (theUlLi !== ulLiList[index]) {
+                            fadeout(theUlLi);
+//                            console.log('淡出函数返回');
+
+                        }
+                    });
+
+                    fadein(ulLiList[index]);
+//                    console.log('淡入函数返回');
+                });
+
+            });
+        }
+    </script>
+</head>
+<body>
+<div id="container">
+    <ul>
+        <li style="display: block"><img src="1.jpg" alt=""></li>
+        <li><img src="2.jpg" alt=""></li>
+        <li><img src="3.jpg" alt=""></li>
+        <li><img src="4.jpg" alt=""></li>
+        <li><img src="5.jpg" alt=""></li>
+    </ul>
+    <ol>
+        <li class="chosen">1</li>
+        <li>2</li>
+        <li>3</li>
+        <li>4</li>
+        <li>5</li>
+    </ol>
+</div>
+</body>
+</html>

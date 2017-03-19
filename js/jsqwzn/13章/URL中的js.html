@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>URL中的js</title>
+    <style>
+        a {
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<!--总体来说，这样在href里面有JavaScript代码的，会把页面擦除重写-->
+<a href="javascript:new Date().toLocaleTimeString();">一个href为JavaScript代码的超链接</a>
+<a href="javascript:alert(new Date().toLocaleTimeString());">一个href为JavaScript代码的超链接，里面有alert</a>
+<!--如果只执行代码不返回值，就用void，其实擦除重写的现象只在一些浏览器里有-->
+<a href="javascript:window.open('about:blank');">一个href为JavaScript代码的超链接，没有void打开一个空页</a>
+<a href="javascript:void window.open('about:blank');">一个href为JavaScript代码的超链接，void并打开一个空页</a>
+<a href='javascript:
+    var e="", r="";
+    do{
+        e=prompt("表达式："+e+"\n"+r+"\n",e);
+        try{
+            r = "表达式返回结果：" + eval(e);
+            }
+        catch(ex){
+            r=ex;
+        }
+    }while(e);
+    void 0;
+;'>一个href为JavaScript代码的超链接，打开一个JavaScript解析器</a>
+</body>
+</html>

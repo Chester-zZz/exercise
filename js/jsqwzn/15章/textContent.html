@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>textContent与innerHTML的区别</title>
+    <script>
+        window.onload = function () {
+            var div1 = document.getElementById('div1');
+            alert('textContent: ' + div1.textContent + '\n' + 'innerHTML: ' + div1.innerHTML);
+
+        }
+    </script>
+</head>
+<body>
+<!--textContent只包含文本，innerHTML会把里面的标签也当做文本打印出来-->
+<div id="div1">我是<strong>一些</strong>内容</div>
+</body>
+</html>

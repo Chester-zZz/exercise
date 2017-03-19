@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>location属性</title>
+    <script>
+        window.onload = function () {
+            var result = [];
+            var contents = {
+                'location': location,
+                'locatioin.href': location.href,
+                'locatioin.search': location.search,
+                'locatioin.search.substring(1)': location.search.substring(1),
+                'locatioin.hash': location.hash,
+                'locatioin.protocol': location.protocol,
+                'locatioin.host': location.host,
+                'locatioin.hostname': location.hostname,
+                'locatioin.port': location.port,
+                'locatioin.pathname': location.pathname
+            };
+            for (i in contents) {
+                result.push('【' + i + '】' + ': ' + contents[i] + '<br>');
+            }
+            document.getElementById('p1').innerHTML = result.join('');
+
+            var button1 = document.getElementById('button1')
+            button1.onclick = function () {
+                location = '#top';
+            };
+            var button2 = document.getElementById('button2')
+            button2.onclick = function () {
+                location = 'www.baidu.com';
+            };
+            var button3 = document.getElementById('button3')
+            button3.onclick = function () {
+                location.assign('www.baidu.com');
+            };
+            var button4 = document.getElementById('button4')
+            button4.onclick = function () {
+                location.replace('www.baidu.com');
+            };
+            var button5 = document.getElementById('button5')
+            button5.onclick = function () {
+                history.back();
+            };
+            var button6 = document.getElementById('button6')
+            button6.onclick = function () {
+                history.forward();
+            };
+        }
+    </script>
+</head>
+<body>
+<p id="p1"></p>
+<input type="button" value="跳转到顶部#top" id="button1">
+<input type="button" value="跳转到www.baidu.com" id="button2">
+<input type="button" value="assign百度" id="button3">
+<input type="button" value="replace百度" id="button4">
+<input type="button" value="向后" id="button5">
+<input type="button" value="向前注意地址栏的top" id="button6">
+
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数字时钟</title>
+
+    <script>
+        function ticking() {
+            var eClock = document.getElementById('clock');
+            var time0 = new Date();
+            eClock.innerHTML = time0.toLocaleTimeString();
+            setTimeout(ticking, 1000);
+        }
+        window.onload = ticking;
+    </script>
+
+    <style>
+        #clock {
+            font: 30px Arial, sans-serif;
+            background: #ae3689;
+            padding: 10px;
+            border-right: 2px solid black;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<h1>数字时钟</h1>
+<span id="clock"></span>
+
+</body>
+</html>

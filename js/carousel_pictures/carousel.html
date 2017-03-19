@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>轮播图</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        #container {
+            width: 520px;
+            height: 280px;
+            margin: 30px auto;
+            position: relative;
+            border: 1px solid #7a7a7a;
+
+        }
+        .picShow{
+            display: block;
+        }
+
+        ul {
+            width: 520px;
+            height: 280px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            list-style: none;
+        }
+
+        ul li {
+            width: 520px;
+            float: left;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+        }
+
+        ol {
+            list-style: none;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 6;
+        }
+
+        ol li {
+            width: 25px;
+            height: 25px;
+            float: left;
+            border: 1px solid #7a7a7a;
+            text-align: center;
+            line-height: 25px;
+            margin-left: 5px;
+            background-color: rgba(100, 100, 100, 0.5);
+            color: white;
+            font-weight: bold;
+        }
+
+        .chosen {
+            background-color: rgba(254, 92, 29, 0.9);
+            color: white;
+        }
+    </style>
+    <script>
+        window.onload = function () {
+            var ulLiList = document.getElementsByTagName('ul')[0].getElementsByTagName('li');
+//            给ol的li添加mouseover事件处理程序
+            var olLiList = document.getElementsByTagName('ol')[0].getElementsByTagName('li');
+//            选中的是类数组对象，不是数组对象
+            Array.prototype.forEach.call(olLiList, function (theLi, index) {
+                theLi.addEventListener('mouseover', function () {
+//                    console.log(eachLi);
+//                    eachLi.style.color = 'black';
+                    var formerOlLi = document.getElementsByClassName('chosen')[0];
+                    formerOlLi.className='';
+                    theLi.className='chosen';
+
+                    var formerUlLi = document.getElementsByClassName('picShow')[0];
+                    formerUlLi.className='';
+//                    console.log(index);
+                    ulLiList[index].className='picShow';
+                });
+
+            });
+        }
+    </script>
+</head>
+<body>
+<div id="container">
+    <ul>
+        <li class="picShow"><img src="1.jpg" alt=""></li>
+        <li><img src="2.jpg" alt=""></li>
+        <li><img src="3.jpg" alt=""></li>
+        <li><img src="4.jpg" alt=""></li>
+        <li><img src="5.jpg" alt=""></li>
+    </ul>
+    <ol>
+        <li class="chosen">1</li>
+        <li>2</li>
+        <li>3</li>
+        <li>4</li>
+        <li>5</li>
+    </ol>
+</div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>第一个窗口</title>
+    <script>
+        window.onload=function () {
+            var button1 = document.getElementById('button1');
+            button1.onclick = function () {
+                var w1 = window.open('', '', 'width=400, height=400, status=yes');
+                w1.alert('这是第二个窗口，打开我的是window的location是：'+w1.opener.location);
+                w1.location = 'http://www.baidu.com'
+            };
+        };
+    </script>
+</head>
+<body>
+<input type="button" value="点我生成一个新的窗体" id="button1"><br>
+<iframe src="http://www.baidu.com" frameborder="0"></iframe>
+</body>
+</html>
