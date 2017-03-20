@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>轮播图手风琴平均</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        #container {
+            width: 520px;
+            height: 280px;
+            margin: 30px auto;
+            position: relative;
+            border: 1px solid #7a7a7a;
+            /*这个overflow应该加在容器上，不应该是加载ul上，因为ul会动*/
+            overflow: hidden;
+        }
+
+        ul {
+            width: 520px;
+            height: 283px;
+            /*position: absolute;*/
+            top: 0;
+            left: 0;
+            list-style: none;
+        }
+
+        ul li {
+            width: 520px;
+            position: absolute;
+            /*float: left;*/
+            /*top: 0;*/
+            /*left: 0;*/
+            /*display: block;*/
+        }
+
+        ol {
+            list-style: none;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 6;
+        }
+
+        ol li {
+            width: 25px;
+            height: 25px;
+            float: left;
+            border: 1px solid #7a7a7a;
+            text-align: center;
+            line-height: 25px;
+            margin-left: 5px;
+            background-color: rgba(100, 100, 100, 0.5);
+            color: white;
+            font-weight: bold;
+        }
+
+        .chosen {
+            background-color: rgba(254, 92, 29, 0.9);
+            color: white;
+        }
+    </style>
+    <script>
+        window.onload = function () {
+
+            var increment=40;
+//            style是获取行内样式，getComputedStyle是获取计算后的样式
+            var ul1 = document.getElementsByTagName('ul')[0];
+            var ulLiList = ul1.getElementsByTagName('li');
+            ul1.slideCounter = 0;
+            var firstImgLi = document.getElementById('firstImgLi');
+            var ulLiWidth = parseFloat(window.getComputedStyle(firstImgLi).width);
+            var ulLiCount = ul1.getElementsByTagName('li').length;
+            var averageIncrement = parseInt(ulLiWidth/ulLiCount);
+            for (var i = 1; i < ulLiCount; i++) {
+                ulLiList[i].style.left = ulLiWidth - averageIncrement * (ulLiCount -i) + 'px';
+                ulLiList[i].style.zIndex = i;
+//                console.log(ulLiList[i]);
+            }
+
+            function slideElement(element1, toLeft) {
+
+                clearInterval(element1.slideTimer);
+
+//                这里的增量，可能增加一份之后会导致越过本来想要达到的地方，所以会导致无限变化,并不是定时器的原因，而是最后一次的定时器无法清除
+                var leftIncrement = (toLeft - parseFloat(window.getComputedStyle(element1).left.slice(0, -2))) / 10;
+                var t = setInterval(function () {
+                    var leftNow = parseFloat(window.getComputedStyle(element1).left.slice(0, -2));
+
+                    if (leftNow !== toLeft) {
+//                        这里如果越界了，就直接设为那个目标值，因为增量足够小，所以这种反向运动的一个瞬间应该看不出来
+                        if ((toLeft - leftNow) * leftIncrement < 0) {
+                            element1.style.left = toLeft + 'px';
+                        } else {
+                            element1.style.left = leftNow + leftIncrement + 'px';
+                        }
+                    } else {
+                        clearInterval(t);
+//                        console.log('正式解除定时器:' + element1.slideTimer);
+                    }
+                }, 30);
+                element1.slideTimer = t;
+            }
+
+            for (var i=0; i < ulLiCount; i++) {
+                ulLiList[i].index=i;
+                ulLiList[i].onmouseover=function () {
+                    for (var j=0; j < ulLiCount; j++) {
+                        if (j<=this.index){
+                            slideElement(ulLiList[j], j*increment);
+                        }else if(j>this.index){
+                            slideElement(ulLiList[j], ulLiWidth - increment * (ulLiCount -j));
+                        }
+
+                    }
+                };
+                ulLiList[i].onmouseout=function () {
+                    for (var j=0; j < ulLiCount; j++) {
+                        slideElement(ulLiList[j], ulLiWidth - averageIncrement * (ulLiCount -j));
+                    }
+                };
+            }
+
+        }
+
+    </script>
+</head>
+<body>
+<div id="container">
+    <ul>
+        <!--这里是通过将第一个元素定位的方式-->
+        <li id="firstImgLi"><img src="1.jpg" alt=""></li>
+        <li><img src="3.jpg" alt=""></li>
+        <li><img src="4.jpg" alt=""></li>
+        <li><img src="2.jpg" alt=""></li>
+        <li><img src="5.jpg" alt=""></li>
+    </ul>
+
+</div>
+</body>
+</html>
