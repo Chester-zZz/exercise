@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>瀑布流效果</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        #imgContainer {
+            border: 1px solid red;
+            margin: 30px auto 0;
+            position: relative;
+            width: 90%;
+            /*overflow: hidden;*/
+        }
+        #loadingGifContainer{
+            text-align: center;
+            margin:30px auto 0;
+            height: 10px;
+        }
+
+    </style>
+    <script type="text/javascript" src="jquery-3.2.0.js"></script>
+    <script>
+        /*http://www.wookmark.com/api/json/popular?callback=a&page=
+         height:"508"
+         id:"639320"
+         image:"http://www.wookmark.com/images/original/639320_wookmark.jpg"
+         preview:"http://www.wookmark.com/images/thumbs/639320_wookmark.jpg"
+         referer:"http://interiorzine.com/2017/03/10/co-ap-renovated-and-extended-a-typical-suburban-home-in-sydney/"
+         title:"CO-AP Renovated and Extended a Typical Suburban Home in Sydney - InteriorZine"
+         url:"http://www.wookmark.com/image/639320/co-ap-renovated-and-extended-a-typical-suburban-home-in-sydney-interiorzine"
+         width:"700"*/
+
+        $(function () {
+//            添加图片后，图片会比div大一块，是因为在添加图片的过程中出现了右侧的滚动条，使document的width发生改变
+//            ==================获取滚动条的宽度=======================
+            function getScrollbarWidth() {
+                var oP = document.createElement('p'),
+                    styles = {
+                        width: '100px',
+                        height: '100px',
+                        overflowY: 'scroll'
+                    }, i, scrollbarWidth;
+                for (i in styles) oP.style[i] = styles[i];
+                document.body.appendChild(oP);
+                scrollbarWidth = oP.offsetWidth - oP.clientWidth;
+                oP.remove();
+                return scrollbarWidth;
+            }
+
+            var scrollBarWidth = getScrollbarWidth();
+
+
+//           ======================== 定义变量=================================
+            var baseImgURL = "http://www.wookmark.com/api/json/popular?callback=?"; //用于jsonp的基础地址
+            var loadImgButton = true;
+            var designWidth = 200; //一个大致的列宽，用来计算可以存放几列
+            var iPageCount = 0; //用于下拉时载入下一页
+            var imgContainerDiv = $("#imgContainer");
+            var loadingGifContainerDiv = $('#loadingGifContainer');
+            var iInnerWidth = 0;
+            var iColumnNum = 0;
+            var widthAverageDiff = 0;
+            var iColumnWidth = 0;
+
+            var aColumnHeightList = [];
+            var minH = 0;  // 用于触发再次请求图片数据
+            var aColumnLeftList = [];
+
+            function initColumn() {
+                //程序使用的是计算值，浏览器渲染的是实际值
+                iInnerWidth = ($(window).innerWidth() - scrollBarWidth) * 0.9; //读取视窗宽度，注意这里是div的宽度
+                iColumnNum = Math.floor(iInnerWidth / designWidth); //计算现在的视窗内可以存在几列
+                widthAverageDiff = (iInnerWidth - iColumnNum * designWidth) / iColumnNum;
+                iColumnWidth = designWidth + widthAverageDiff; //为了不产生定位偏差，要用真实的宽度，不能用预先估计的
+
+                //存储每一列的高度和每一列的宽度位置
+                for (var i = 0; i < iColumnNum; i++) {
+                    aColumnHeightList[i] = 0;
+                    aColumnLeftList[i] = i * iColumnWidth;
+                }
+                console.log(iColumnNum);
+                console.log(innerWidth);
+            }
+
+            initColumn();
+
+
+            //=========================获取哪一列最短=========================
+            function getColumnHeightMin(columnLHeightList) {
+                var index = 0;
+                var height = columnLHeightList[0];
+                for (var i = 1; i < columnLHeightList.length; i++) {
+                    if (height > columnLHeightList[i]) {
+                        index = i;
+                        height = columnLHeightList[i];
+                    }
+                }
+                return index;
+            }
+
+            //=========================用JSONP载入图片插入页面=========================
+            function loadImg(page) {
+                loadingGifContainerDiv.show();
+                var imgList = [];
+                loadImgButton = false;
+
+                $.getJSON(baseImgURL, 'page=' + page, function (theJsonData) {
+                    for (var i = 0; i < theJsonData.length; i++) {
+                         // 外来数据要过滤
+                        var eachData = theJsonData[i];
+                        var eachImgHeight = iColumnWidth * eachData.height / eachData.width;
+                        console.log(eachImgHeight.toString());
+                        if (isNaN(eachImgHeight)||(!isFinite(eachImgHeight))){
+                            continue;
+                        }
+                        var index2 = getColumnHeightMin(aColumnHeightList);
+                        var theImg = $('<img/>', {
+                            src: eachData.preview,
+                            css: {
+                                position: "absolute",
+                                top: aColumnHeightList[index2],
+                                left: aColumnLeftList[index2],
+                                width: iColumnWidth,
+                                height: eachImgHeight,
+                                padding: 0,
+                                margin: 0,
+                                border:'1px solid black'
+                            }
+                        });
+//                        如果每次都append的话会影响性能
+                        aColumnHeightList[index2] += eachImgHeight + 5;
+                        imgList.push(theImg);
+                    }
+                    loadingGifContainerDiv.hide();
+                    imgContainerDiv.append(imgList);
+                    imgContainerDiv.height(aColumnHeightList.reduce(function (a, b) {
+                        return a > b ? a : b;
+                    }));
+                    loadImgButton = true;
+//                    minH = aColumnHeightList[getColumnHeightMin(aColumnHeightList)];
+                });
+                iPageCount++;
+            }
+
+            //=========================执行=========================
+            loadImg(iPageCount);
+            //=========================滚动条滚动事件=========================
+            $(window).on('scroll', function () {
+                var windowH = $(window).scrollTop() + $(window).innerHeight();
+                var minH = aColumnHeightList[getColumnHeightMin(aColumnHeightList)];
+                console.log(windowH);
+                console.log(minH);
+                if (loadImgButton === false) {
+                    loadingGifContainerDiv.show();
+                    console.log('开关关闭无法请求');
+                    return;
+                }
+                if (minH !== 0 && windowH >= minH) {
+                    loadImg(iPageCount);
+                }
+            });
+            $(window).on('resize', function () {
+
+                var oldColumn = iColumnNum;
+                initColumn();
+                if (oldColumn === iColumnNum) {
+                    return;
+                }
+                imgContainerDiv.find('img').each(function () {
+                    var minIndex = getColumnHeightMin(aColumnHeightList);
+                    var minH = aColumnHeightList[minIndex];
+                    $(this).animate({
+                        left: aColumnLeftList[minIndex],
+                        top: minH
+                    });
+                    aColumnHeightList[minIndex] += $(this).height() + 5;
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+
+<div id="imgContainer"></div>
+<div id="loadingGifContainer"><img src="images/loading.gif" alt="Loading..."></div>
+</body>
+</html>
