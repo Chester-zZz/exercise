@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>瀑布流效果</title>
+    <!--注意点：
+        1、jsonp在jquery中的回调函数是jquery自动生成的，所以url中callback后面加个问号就行。
+        之所以加上“callback”的字样，是为了让服务器识别出用callback设定的参数来包裹传回的数据。
+        2、在设计长页面时，如果计算中有涉及到视口大小的，需要提前考虑滚动条的宽度。
+        3、请求的数据需要过滤，如果请求回来不及时过滤，在计算后也要过滤。-->
     <style>
         * {
             margin: 0;
