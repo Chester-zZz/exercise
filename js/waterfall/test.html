@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        div {
+            border: 1px solid red;
+            height: 20px;
+            /*background-color: black;*/
+            margin: 30px auto;
+            position: relative;
+            width: 90%;
+        }
+    </style>
+    <script type="text/javascript" src="jquery-3.2.0.js"></script>
+    <script>
+        $(function () {
+            var container = $("#div1");
+            var iDivWidth = container.innerWidth();
+            var count = 7;
+            var iImgWidth = iDivWidth/count;
+            for (var i = 0; i < count; i++) {
+                container.append($(
+                    '<img/>',
+                    {
+                        css: {
+                            position:'absolute',
+                            width: iImgWidth,
+                            height:3,
+                            top:0,
+                            left:iImgWidth*i,
+                            border:'1px solid black'
+                        }
+                    }
+                ));
+            }
+        });
+    </script>
+</head>
+<body>
+<div id="div1"></div>
+</body>
+</html>

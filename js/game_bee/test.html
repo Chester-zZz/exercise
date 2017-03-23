@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        #div1{
+            width: 100px;
+            height: 100px;
+            background-color: black;
+            position: relative;
+        }
+    </style>
+    <script>
+        window.onload= function () {
+            var div1 = document.getElementById('div1');
+            var left = div1.offsetLeft;
+            var top = div1.offsetTop;
+            setInterval(function(){
+                left = div1.offsetLeft;
+                top = div1.offsetTop;
+                div1.style.left = left+10+'px';
+//                div1.style.top = top+10+'px';
+            },1000);
+        };
+    </script>
+</head>
+<body>
+<div id="div1"></div>
+</body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>小蜜蜂游戏</title>
+    <!--
+    注意点和知识点：
+    1、属性读取注意字符串转为数字。
+    2、要获取新创建的元素的属性要先添加进文档。
+    3、移动元素的时候，最好确保元素不是相对定位，因为相对定位每次移动都是相对上一次的位置。
+    4、css文字对齐要在设置字体属性之后。
+    5、一堆相邻的元素，如果要都改定位，改前面元素定位的时候后面的offset会变。
+    6、如果给元素自定义属性，outerHTML不会显示这些属性。
+    7、移除元素不能用document，用ele.parentNode.removeChild(ele)。
+    8、删除元素的时候，选取这些元素的数组可能会实时更新，用while比较好。
+    -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        #gameBox {
+            width: 1000px;
+            height: 800px;
+            margin: 30px auto;
+            background-color: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #gameBegin {
+            width: 100px;
+            height: 30px;
+            position: absolute;
+            left: 450px;
+            top: 385px;
+            border: 2px solid #fff;
+            color: #fff;
+            text-align: center;
+            line-height: 30px;
+        }
+
+        #score {
+            width: 100px;
+            height: 30px;
+            float: left;
+            margin: 1px 1px;
+            border: 1px solid #fff;
+            display: none;
+            font: 1em Arial, sans-serif;
+            color: white;
+            /*这里的文字对齐要在设置字体的后面，不然无效*/
+            text-align: left;
+            line-height: 30px;
+            vertical-align: middle;
+        }
+
+        .beeGroup {
+            width: 400px;
+            position: absolute;
+            margin: 30px auto;
+
+        }
+
+        .bee {
+            width: 40px;
+            height: 28px;
+            float: left;
+            list-style: none;
+        }
+
+        .bee1 {
+            background: url("images/bee1.png") no-repeat center;
+        }
+
+        .bee2 {
+            background: url("images/bee2.png") no-repeat center;
+        }
+
+        .bee3 {
+            background: url("images/bee3.png") no-repeat center;
+        }
+
+        .fighter {
+            width: 43px;
+            height: 60px;
+            position: absolute;
+            background: url("images/battlePlane.png") no-repeat center;
+        }
+
+        .bullet {
+            width: 3px;
+            height: 10px;
+            position: absolute;
+            background-color: white;
+        }
+    </style>
+    <script>
+        window.onload = function () {
+            //=========================游戏数据及方法=========================
+            Game = {
+                score: 0,
+                gameDiv: document.getElementById('gameBox'),
+                gameBeginDiv: document.getElementById('gameBegin'),
+                gameScoreDiv: document.getElementById('score'),
+                gameScoreSpan: document.getElementById('span1'),
+                levelData: {
+                    levelCount: 0,
+                    beeGroupData: [['3-10-2', '3-10-1'],
+                        ['1-10-3', '2-10-2', '3-10-1'],
+                        ['1-10-3', '3-10-2', '2-10-1'],
+                        ['1-10-3', '4-10-2', '1-10-1'],
+                        ['1-10-3', '5-10-2'],
+                        ['2-10-3', '4-10-2']]
+                },
+                timers: [],
+
+                initGame: function () {
+                    // 由于是绑定在div的click事件上，所以this的指向改变了
+                    // console.log('this===Game?--->' + (this === Game));
+                    this.gameBeginDiv.style.display = 'none';
+                    this.clear;
+                    this.createBeeGroup();
+                    this.createFighter();
+                    this.createScore();
+                    this.beeGroupMove();
+                    this.fighterControl();
+                    this.oneBeeAttack();
+                },
+                createBeeGroup: function () {
+                    var levelCountNow = this.levelData.levelCount;
+                    var beeGroupDataNow = this.levelData.beeGroupData[levelCountNow];
+                    var beeGroupUl1 = document.createElement('ul');
+                    beeGroupUl1.className = 'beeGroup';
+                    var d11 = [];
+                    var oneTypeBeeArray = null;
+                    for (var i = 0; i < beeGroupDataNow.length; i++) {
+                        d11 = beeGroupDataNow[i].split('-');
+
+                        oneTypeBeeArray = Bee.createTypeBee(d11);
+                        for (var j = 0; j < oneTypeBeeArray.length; j++) {
+                            beeGroupUl1.appendChild(oneTypeBeeArray[j]);
+                        }
+
+                    }
+                    this.gameDiv.appendChild(beeGroupUl1);
+                    beeGroupUl1.style.top = '0px';
+                    beeGroupUl1.style.left = (this.gameDiv.offsetWidth - beeGroupUl1.offsetWidth) / 2 + 'px';
+                    this.beeGroupUl = beeGroupUl1;
+
+
+//                    这几行代码要写在这里，因为如果写在oneBeeAttack里，ul已经开始动了
+                    var theBee = null;
+                    this.beeLiArray = this.gameDiv.getElementsByTagName('li');
+                    this.ulBeeLiArray = this.beeGroupUl.getElementsByTagName('li');
+                    // 在创建蜂群的时候是浮动流，所以蜂群会自动换行排开，要移动了，要切换成定位流
+                    for (var i = 0; i < this.beeLiArray.length; i++) {
+                        theBee = this.beeLiArray[i];
+                        // 这里不能改成绝对定位，因为每个飞出去的bee原来的位置还要被占据着，不能由别的填充
+                        theBee.style.left = theBee.offsetLeft + 'px';
+                        theBee.style.top = theBee.offsetTop + 'px';
+//                        delete theBee.style.float;
+//                        console.log(theBee.originLeft);
+                    }
+//                    这里写成两个循环，是因为前面的设置absolute了之后后面的会补上
+                    for (var i = 0; i < this.beeLiArray.length; i++) {
+                        theBee = this.beeLiArray[i];
+                        theBee.style.position = 'absolute';
+                    }
+                },
+                createFighter: function () {
+                    var fighter11 = Fighter.createOneFighter();
+                    // 这里要先append，才可以和css样式相关联，才能计算出offset，不然样式里offsetHeight为0
+                    this.gameDiv.appendChild(fighter11);
+                    // 获取的属性都是字符串
+                    fighter11.style.top = parseFloat(this.gameDiv.offsetHeight) - parseFloat(fighter11.offsetHeight) + 'px';
+                    fighter11.style.left = (parseFloat(this.gameDiv.offsetWidth) - parseFloat(fighter11.offsetWidth)) / 2 + 'px';
+                    // this1是Game
+                    var this1 = this;
+                    // 定义发射子弹方法并在此检测是否敌人都已经被消灭
+                    fighter11.shoot = function () {
+                        var bullet = document.createElement('div');
+                        if (this1.beeLiArray.length === 0) {
+
+                            // 因为这里可能还没有通关，所以进行下一关之前应该先清理子弹，后面bee炸飞机的时候应该先清理bee，避免重复alert
+
+                            this1.clear();
+                            alert('过关了！目前得分：' + this1.score);
+                            this1.levelData.levelCount++;
+                            if (this1.levelData.levelCount === this1.levelData.beeGroupData.length) {
+                                alert('通关了！总得分：' + this1.score);
+                                window.location.reload();
+                            } else {
+                                this1.initGame();
+                            }
+
+                        }
+                        bullet.className = 'bullet';
+                        this1.gameDiv.appendChild(bullet);
+                        // 先创建，再计算定位，这里this是飞机
+                        bullet.style.left = this.offsetLeft + this.offsetWidth / 2 + 'px';
+                        bullet.style.top = this.offsetTop - bullet.offsetHeight + 'px';
+                        var bulletSpeed = this.bulletSpeed;
+                        var collapseFlag = 0;
+                        bullet.moveTimer = setInterval(function () {
+                            var topNow = bullet.offsetTop;
+                            if (topNow < 0) {
+                                clearInterval(bullet.moveTimer);
+                                this1.gameDiv.removeChild(bullet);
+                            }
+                            bullet.style.top = topNow - bulletSpeed + 'px';
+                            // 检测bullet和bee的碰撞
+                            for (var i = 0; i < this1.beeLiArray.length; i++) {
+                                // 要检测所有的bee，所以要新建变量
+                                var bee1 = this1.beeLiArray[i];
+//                                console.log(bee1.blood);
+
+                                collapseFlag = this1.collapseDetect(bee1, bullet);
+                                if (collapseFlag === 1) {
+                                    bee1.blood--;
+//                                    console.log(bee1.blood);
+                                    if (bee1.blood === 0) {
+                                        this1.score += bee1.score;
+                                        this1.gameScoreSpan.innerText = this1.score;
+                                        if (bee1.moveTimer) {
+                                            clearInterval(bee1.moveTimer);
+                                        }
+
+                                        bee1.parentNode.removeChild(bee1)
+                                    }
+                                    clearInterval(bullet.moveTimer);
+                                    this1.gameDiv.removeChild(bullet);
+                                    break;
+                                }
+
+                            }
+                        }, 50);
+                    };
+                    this.fighter = fighter11;
+                },
+                createScore: function () {
+                    this.gameScoreDiv.style.display = 'block';
+                    this.gameScoreSpan.innerText = this.score;
+                },
+                beeGroupMove: function () {
+//                    蜜蜂群的定位必须是绝对定位，不然每次移动都相对上次的位置移动，而不是相对一个固定的地方移动。
+                    var this1 = this;
+                    var speedX = Bee.beeData.groupSpeedX;
+                    var speedY = Bee.beeData.groupSpeedY;
+                    var ul1 = this1.beeGroupUl;
+                    var gameBox = this1.gameDiv;
+                    var lBoundary = 0;
+                    var rBoundary = parseFloat(gameBox.offsetWidth) - parseFloat(ul1.offsetWidth);
+                    var ul1Left = 0;
+                    var ul1Top = 0;
+                    this1.timers.push(setInterval(function () {
+                        // 由于是相对定位，每次移动的时候是相对上一次的位置来定位，所以每次移动都要重新计算一次上一次的位置
+                        ul1Left = parseFloat(ul1.offsetLeft);
+                        if ((ul1Left < lBoundary ) || rBoundary < ul1Left) {
+                            speedX *= -1;
+                            ul1Top = parseFloat(ul1.offsetTop);
+                            ul1.style.top = ul1Top + speedY + 'px';
+                        }
+                        ul1.style.left = ul1Left + speedX + 'px';
+
+                    }, 100));
+                },
+                fighterControl: function () {
+                    var this2 = this;
+                    var theFighter = this.fighter;
+                    var lBoundary = 0;
+                    var rBoundary = parseFloat(this2.gameDiv.offsetWidth) - parseFloat(theFighter.offsetWidth);
+
+                    theFighter.move = function () {
+                        // 这里的this是指theFighter
+                        var fighterLeft = theFighter.offsetLeft;
+                        var flag = theFighter.moveFlag;
+                        if (flag === 0) {
+                            return;
+                        } else if (flag === 1 && fighterLeft > lBoundary) {
+                            theFighter.style.left = fighterLeft - theFighter.speedX + 'px';
+                        } else if (flag === 2 && fighterLeft < rBoundary) {
+                            theFighter.style.left = fighterLeft + theFighter.speedX + 'px';
+                        }
+                    };
+                    document.onkeydown = function (event) {
+                        // 如果单写keyCode的话，在想连续走的时候浏览器要判断是否方向键连按，会有一个延迟。
+                        // 而且，如果在连按方向键不松开的过程中，按下空格键，飞机会停止运动。
+                        // 所以不如加个定时器，换方向的时候手动清除。
+                        var keyNow = event.keyCode;
+                        if (keyNow == 37 || keyNow == 39) {   // 方向按键
+                            if (!(theFighter.timerFlag)) {
+                                theFighter.moveTimer = setInterval(function () {
+                                    theFighter.move();
+                                }, 50);
+                                theFighter.timerFlag = true;
+                            }
+                            // moveKey用于判断上次的按键是哪个，不然切换方向的时候快速按键会卡顿
+                            theFighter.moveKey = keyNow;
+                            if (keyNow == 37) {
+                                theFighter.moveFlag = 1;
+                            } else if (keyNow == 39) {
+                                theFighter.moveFlag = 2;
+                            }
+                        }
+                        if (keyNow == 32) {  // 发射按键，即空格键
+                            theFighter.shoot();
+                        }
+
+
+                    };
+                    document.onkeyup = function (event) {
+                        var upKeyNow = event.keyCode;
+                        var moveKey = theFighter.moveKey;
+                        if (upKeyNow == 37) {
+                            if (moveKey == 39) {
+                                return;
+                            } else if (moveKey == 37) {
+                                clearInterval(theFighter.moveTimer);
+                                theFighter.timerFlag = false;
+                            }
+                        }
+                        if (upKeyNow == 39) {
+                            if (moveKey == 37) {
+                                return;
+                            } else if (moveKey == 39) {
+                                clearInterval(theFighter.moveTimer);
+                                theFighter.timerFlag = false;
+                            }
+                        }
+
+                    };
+                },
+                oneBeeAttack: function () {
+
+
+                    var this1 = this; // this是Game
+                    var theFighter = this1.fighter;
+                    var beeGroup = this1.beeGroupUl;
+                    var gameBox = this1.gameDiv;
+
+                    this.timers.push(setInterval(function () {
+                        // 蜂群会变，这里每次调用都要重新取
+                        var ulBeeLiArray = this1.ulBeeLiArray;
+                        if (ulBeeLiArray.length === 0) {
+                            return;
+                        }
+                        var oneBeeNumber = Math.floor(Math.random() * ulBeeLiArray.length);
+//                        这里注意一下，beeLiArray是使用tag选取的，如果是document范围选取，
+//                        上一次选取的bee还存在，而这次选取相同的oneBeeNumber，这一次又选取了该bee（从beeGroupUl到gameBox），
+//                        编号肯定不同，但是对象是同一个，这就会造成一个bee被选取了两次的bug，再设置left和top会出现瞬移,所以，
+//                        这个beeLiArray要设置为从beeGroupUl中用选取
+                        var oneBeeLi = ulBeeLiArray[oneBeeNumber];
+//                        oneBeeLi.innerText = oneBeeNumber;
+//                        oneBeeLi.style.textAlign = 'center';
+
+                        //如果onebee总是相对ul计算位置，ul的位置变化会影响onebee的位置，如果二者运动频率相似，会出现onebee抖动不前进的现象
+                        //所以这里把onebee揪出来放到gameBox里，这样计算位置就不受ul运动的影响，而且计算也不用相对ul了
+                        //但是在揪出来的一瞬间，要确定onebee相对gameBox的位置，这时候需要用到ul也就是beeGroup的位置
+                        //揪出来appendChild之后，ul中原来的元素就直接到gameBox里了，不是复制一份
+                        var left1 = oneBeeLi.offsetLeft + beeGroup.offsetLeft;
+                        var top1 = oneBeeLi.offsetTop + beeGroup.offsetTop;
+                        gameBox.appendChild(oneBeeLi);
+                        oneBeeLi.style.left = left1 + 'px';
+                        oneBeeLi.style.top = top1 + 'px';
+//                        console.log(beeGroup.childNodes.length);
+
+                        // 选出来一个飞出去的，就把这个从整体的蜂群对象中剔除
+//                        delete this1.ulBeeLiArray[oneBeeNumber];
+//                        oneBeeLi.style.position='relative';
+                        oneBeeLi.beeType = parseFloat(oneBeeLi.className.slice(7));
+                        var theBeeSpeed = Bee.beeData.speed[oneBeeLi.beeType - 1];
+                        var beeLeft = 0,
+                            beeTop = 0,
+                            fighterLeft = 0,
+                            fighterTop = 0;
+                        var distance = 0, leftDiff = 0, topDiff = 0, leftMove = 0, topMove = 0;
+                        var collapseFlag = 0;
+                        // 这些变量每个飞出去的bee都有自己的一套，所以要放在创建飞出去bee的函数里
+                        oneBeeLi.obaTimer = setInterval(function () {
+//                            console.log(beeLeft);
+                            // 每次调用都要重新计算这些参数，因为飞出来的bee和飞机的位置可能都变了
+                            // 取中心点的距离
+                            // 由于飞出来的bee的原来的位置必须保留，所以必须还得是相对定位，bee的相对定位是相对ul的
+                            beeLeft = oneBeeLi.offsetLeft + oneBeeLi.offsetWidth / 2;
+//                            console.log('beeLeft:'+beeLeft);
+                            beeTop = oneBeeLi.offsetTop + oneBeeLi.offsetHeight / 2;
+//                            console.log('beeTop:'+beeTop);
+                            fighterLeft = theFighter.offsetLeft + theFighter.offsetWidth / 2;
+                            fighterTop = theFighter.offsetTop + theFighter.offsetHeight / 2;
+                            leftDiff = fighterLeft - beeLeft;
+                            topDiff = fighterTop - beeTop;
+                            distance = Math.sqrt(leftDiff * leftDiff + topDiff * topDiff);
+//                            console.log('distance:'+distance);
+                            leftMove = theBeeSpeed * leftDiff / distance;
+//                            if (distance > 10) {
+//                                console.log(oneBeeNumber + '--->leftMove:' + leftMove);
+//                                console.log(oneBeeNumber + '--->beeLeft:' + beeLeft);
+//
+//                            }
+//                            console.log('leftMove:'+leftMove);
+                            topMove = theBeeSpeed * topDiff / distance;
+                            oneBeeLi.style.left = oneBeeLi.offsetLeft + leftMove + 'px';
+                            oneBeeLi.style.top = oneBeeLi.offsetTop + topMove + 'px';
+
+                            // 检测与fighter的相撞
+                            collapseFlag = this1.collapseDetect(oneBeeLi, theFighter);
+                            if (collapseFlag == 2) {
+                                alert('游戏结束，得分：' + this1.score);
+                                window.location.reload();
+                            }
+
+                        }, 100);
+                    }, 4000));
+
+                },
+                collapseDetect: function (bee, fighterOrBullet) {
+                    if (bee.parentNode === this.gameDiv) {
+                        var beeLeft = bee.offsetLeft;
+                        var beeTop = bee.offsetTop;
+                    } else {
+                        var beeLeft = bee.offsetLeft + this.beeGroupUl.offsetLeft;
+                        var beeTop = bee.offsetTop + this.beeGroupUl.offsetTop;
+                    }
+                    var beeRight = beeLeft + bee.offsetWidth;
+                    var beeBottom = beeTop + bee.offsetHeight;
+                    var attackLeft = fighterOrBullet.offsetLeft;
+                    var attackTop = fighterOrBullet.offsetTop;
+                    var attackRight = attackLeft + fighterOrBullet.offsetWidth;
+                    var attackBottom = attackTop + fighterOrBullet.offsetHeight;
+                    if (attackRight < beeLeft || attackLeft > beeRight || attackTop > beeBottom || attackBottom < beeTop) {
+                        return;
+                    } else {
+                        if (fighterOrBullet === this.fighter) {
+                            return 2; //代表bee和fighter相撞
+                        } else {
+                            return 1; // 代表bee和bullet相撞
+                        }
+                    }
+                },
+                clear: function () {
+                    // 在清除对象的时候，清除一个之后，数组会减少，所以用while比较好，用for的话i会自增，序号和数组长度都变化，比较麻烦
+                    var bees = document.getElementsByClassName('bee');
+
+                    while (bees.length > 0) {
+                        clearInterval(bees[0].obaTimer);
+                        bees[0].parentNode.removeChild(bees[0]);
+                    }
+
+                    var bullets = document.getElementsByClassName('bullet');
+                    while (bullets.length > 0) {
+                        clearInterval(bullets[0].moveTimer);
+
+                        this.gameDiv.removeChild(bullets[0]);
+                    }
+                    ;
+
+                    clearInterval(this.fighter.moveTimer); //清除飞机
+                    this.gameDiv.removeChild(this.fighter);
+                    for (var i = 0; i < this.timers.length; i++) {
+                        clearInterval(this.timers[i]);
+                    }
+                }
+
+
+            };
+            //=========================蜜蜂数据及方法=========================
+            Bee = {
+                beeData: {
+                    blood: [1, 2, 3],
+                    speed: [3, 5, 7],
+                    score: [1, 2, 3],
+                    groupSpeedX: 5,
+                    groupSpeedY: 5,
+                },
+                createTypeBee: function (oneTypeBeeData) {
+                    var resultArray = [];
+                    var dRow = parseInt(oneTypeBeeData[0]);
+                    var dCol = parseInt(oneTypeBeeData[1]);
+                    var dType = parseInt(oneTypeBeeData[2]);
+                    var oneBeeLi = null;
+                    for (var i = 0; i < dRow; i++) {
+                        for (var j = 0; j < dCol; j++) {
+                            oneBeeLi = this.createOneBee(dType);
+                            resultArray.push(oneBeeLi);
+                        }
+                    }
+
+
+                    return resultArray;
+
+                },
+                createOneBee: function (type) {
+                    var theLi = document.createElement('li');
+                    theLi.className = 'bee ' + 'bee' + type;
+                    theLi.blood = this.beeData.blood[type - 1];
+                    theLi.speed = this.beeData.speed[type - 1];
+                    theLi.score = this.beeData.score[type - 1];
+                    return theLi;
+                }
+
+            };
+            //=========================战斗机数据及方法=========================
+            Fighter = {
+                fighterData: {
+                    speedX: 10,
+                    bulletSpeed: 10
+                },
+                createOneFighter: function () {
+                    var fighter = document.createElement('div');
+                    fighter.className = 'fighter';
+                    fighter.speedX = this.fighterData.speedX;
+                    fighter.moveFlag = 0;
+                    fighter.timerFlag = false;
+                    fighter.moveKey = 0;
+                    fighter.bulletSpeed = this.fighterData.bulletSpeed;
+
+                    return fighter;
+                },
+
+
+            };
+            //=========================初始化游戏=========================
+            var beginBtn = document.getElementById('gameBegin');
+            beginBtn.onclick = function () {
+                this.style.display = 'none';
+                Game.initGame();
+            }
+
+        };
+    </script>
+</head>
+<body>
+
+<div id="gameBox">
+    <div id="gameBegin">开始游戏</div>
+    <div id="score">积分：<span id="span1"></span></div>
+</div>
+
+
+</body>
+</html>

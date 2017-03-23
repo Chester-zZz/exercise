@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>轮播图自动播放</title>
+    <title>轮播图自动播放（首元素定位）</title>
     <style>
         * {
             padding: 0;
@@ -102,17 +102,21 @@
 
 //            style是获取行内样式，getComputedStyle是获取计算后的样式
             var ul1 = document.getElementsByTagName('ul')[0];
+            var firstImgLi = document.getElementById('firstImgLi');
 
 //            选中的是类数组对象，不是数组对象
-            var ulLiHeight = parseFloat(window.getComputedStyle(ul1.getElementsByTagName('li')[0]).height);
+            var ulLiHeight = parseFloat(window.getComputedStyle(firstImgLi).height);
 //            console.log('height:'+ulLiHeight);
 //            给ol的li添加mouseover事件处理程序
 
             var olLiList = document.getElementsByTagName('ol')[0].getElementsByTagName('li');
 
-            function autoSlideUp(element1, num, height) {
-                if (element1.slideCounter == 0) {
+            function autoSlideUp(element1, num, height, firstImgLi) {
+                if (element1.slideCounter == num) {
+                    console.log(firstImgLi);
+                    firstImgLi.style.top = 0;
                     element1.style.top = 0;
+                    element1.slideCounter = 0;
                 }
                 console.log(1);
                 element1.slideCounter++;
@@ -122,21 +126,22 @@
 //                由于这里写的滑动函数是异步的，所以这里上面的滑动函数立刻返回，如果在下面的判断修改top值是错误的
 //                因此，将“最后切换到img1的top值修改”这一个步骤放到函数最开始
                 if (element1.slideCounter == num-1) {
-                    console.log(num - 1);
-                    element1.slideCounter = 0;
-                }}
+                    firstImgLi.style.top = num * height + 'px';
+                }
+            }
 
             ul1.slideCounter = 0;
             var ulLiCount = ul1.getElementsByTagName('li').length;
 //            注意setInterval要用function包裹，只能传入一个函数对象，而不是调用
             ul1.autoSlideUpTimer = setInterval(function () {
-                    autoSlideUp(ul1, ulLiCount, ulLiHeight);
+                    autoSlideUp(ul1, ulLiCount, ulLiHeight, firstImgLi);
                     for (var i = 0; i < olLiList.length; i++) {
                         olLiList[i].className = '';
                     }
-                    if (ul1.slideCounter == ulLiCount - 1) {
+                    if (ul1.slideCounter == ulLiCount) {
                         olLiList[0].className = 'chosen';
-                    } else {
+
+                    }else{
                         olLiList[ul1.slideCounter].className = 'chosen';
                     }
                 },
@@ -146,7 +151,7 @@
             };
             ul1.onmouseout = function () {
                 ul1.autoSlideUpTimer = setInterval(function () {
-                        autoSlideUp(ul1, ulLiCount, ulLiHeight);
+                        autoSlideUp(ul1, ulLiCount, ulLiHeight, firstImgLi);
                         for (var i = 0; i < olLiList.length; i++) {
                             olLiList[i].className = '';
                         }
@@ -160,13 +165,12 @@
 <body>
 <div id="container">
     <ul>
-        <!--这里是通过将第一个元素复制一次的方式-->
-        <li><img src="1.jpg" alt=""></li>
+        <!--这里是通过将第一个元素定位的方式-->
+        <li id="firstImgLi" style="position: relative"><img src="1.jpg" alt=""></li>
         <li><img src="2.jpg" alt=""></li>
         <li><img src="3.jpg" alt=""></li>
         <li><img src="4.jpg" alt=""></li>
         <li><img src="5.jpg" alt=""></li>
-        <li><img src="1.jpg" alt=""></li>
     </ul>
     <ol>
         <li class="chosen">1</li>
