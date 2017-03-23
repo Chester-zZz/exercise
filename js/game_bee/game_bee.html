@@ -12,6 +12,7 @@
     5、一堆相邻的元素，如果要都改定位，改前面元素定位的时候后面的offset会变。
     6、如果给元素自定义属性，outerHTML不会显示这些属性。
     7、移除元素不能用document，用ele.parentNode.removeChild(ele)。
+    8、删除元素的时候，选取这些元素的数组可能会实时更新，用while比较好。
     -->
     <style>
         * {
